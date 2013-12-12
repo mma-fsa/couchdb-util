@@ -15,6 +15,7 @@ document_name = sys.argv[2]
 #read pipe for CSV data, assume first line is column names
 reader = csv.reader(sys.stdin, delimiter='\t')
 names = None
+
 try:
 	names = reader.next()
 except StopIteration:
@@ -28,6 +29,7 @@ if names == None:
 num_rows = 0
 num_errors = 0
 docs = []
+
 for row in reader:
 	try:
 		if len(names) != len(row):
@@ -47,8 +49,8 @@ print "Sending to %s..."%bulk_url
 
 try:
 	resp = requests.post(bulk_url, data=docs_data, headers=headers)
-except urllib2.HTTPError as ex:
-	print "Server responded %s: %s"%(ex.code, ex.reason)
+except requests.exceptions.ConnectionError as ex:
+	print "Server error: %s"%(ex)
 	sys.exit(1)
 
 if resp.status_code != 201:
@@ -68,8 +70,8 @@ try:
 			print str(errors)
 except ValueError:
 	print 'error reading response: %s'%raw_resp, sys.exc_info()[0]	
+	sys.exit(1)
 	
-
 print '\n\ndone. read: %s\terrors:%s'%(num_rows,num_errors)
 sys.exit(0)
 ## END MAIN ##
