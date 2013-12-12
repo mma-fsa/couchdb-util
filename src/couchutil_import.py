@@ -9,6 +9,7 @@ if len(sys.argv) != 3:
 		%len(sys.argv)
 	sys.exit(1)
 
+program_name = sys.argv[0]
 database_url = sys.argv[1]
 document_name = sys.argv[2]
 
@@ -19,11 +20,11 @@ names = None
 try:
 	names = reader.next()
 except StopIteration:
-	print 'CouchDBUtil Error, empty input'
+	print 'error, empty input'
 	sys.exit(1)
 
 if names == None:
-	print 'Error, couldn\'t read names'
+	print 'error, couldn\'t read names'
 	sys.exit(1)
 
 num_rows = 0
@@ -38,7 +39,7 @@ for row in reader:
 			"data": dict(zip(names, row))})
 		num_rows += 1
 	except Exception as ex:
-		print 'Error, skipping row %s %s: '%(num_rows,str(ex)),\
+		print 'error, skipping row %s %s: '%(num_rows,str(ex)),\
 			sys.exc_info()[0]	
 		num_errors += 1
 
