@@ -16,6 +16,10 @@ class Defaults:
         return "%(protocol)s://%(userpart)s%(url)s/%(database)s"%\
             self._merge_args(self.__defaultProperties, overrides)
     
+    def dbmsURL(self, overrides={}):
+        return "%(protocol)s://%(userpart)s%(url)s"%\
+            self._merge_args(self.__defaultProperties, overrides)
+    
     def process(self, defaultsFile):        
         with open(defaultsFile, 'r') as f:
             for line in f:                
