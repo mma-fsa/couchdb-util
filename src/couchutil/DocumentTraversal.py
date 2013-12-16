@@ -30,17 +30,17 @@ class DocumentTraversal():
                 try:     
                     visit(k, v)
                 except Exception as e:
-                    raise DocumentTraversalVistorException("Visitor threw exception."),\
+                    raise DocumentTraversalVistorException("visit threw exception."),\
                         None, sys.exc_info()[2]
                 self._depth_first_search(k, v, visit, pop_visit)                
         except (AttributeError, TypeError) as e: 
             pass
-        #don't call pop_visit for root node
+        #don't call pop_visit for root node (currKey == None)
         if currentKey != None:
             try:
                 pop_visit(currentKey, currentValue)
             except Exception as e:
-                raise DocumentTraversalVistorException("Visitor threw exception."), None, sys.exc_info()[2]
+                raise DocumentTraversalVistorException("pop_visit threw exception."), None, sys.exc_info()[2]
     
     def _breadth_first_search(self, currentKey, currentValue, visit, pop_visit, q):
         try:
@@ -48,19 +48,19 @@ class DocumentTraversal():
                 try:     
                     visit(k, v)
                 except Exception as e:
-                    raise DocumentTraversalVistorException("Visitor threw exception."), None, sys.exc_info()[2]
+                    raise DocumentTraversalVistorException("visit threw exception."), None, sys.exc_info()[2]
                 q.append((k,v))
         except (AttributeError, TypeError): 
             pass
         if len(q) > 0:
             next = q.pop(0)
             self._breadth_first_search(next[0], next[1], visit, q)        
-        #don't call pop_visit for root node
+        #don't call pop_visit for root node (currKey == None)
         if currentKey != None:
             try:
                 pop_visit(currentKey, currentValue)
             except Exception as e:
-                raise DocumentTraversalVistorException("Visitor threw exception."), None, sys.exc_info()[2]
+                raise DocumentTraversalVistorException("pop_visit threw exception."), None, sys.exc_info()[2]
         
     _document = None
     _traversal = None
