@@ -17,12 +17,7 @@ class DocumentUpload(object):
         if self._is_disposed:            
             raise Exception("Document already complete")                
         while not self._is_disposed:                
-            try:
-                self._log('Uploading to %s...' % url)
-                resp = requests.post(url, data=document, headers=COUCH_HEADER)
-            except requests.exceptions.ConnectionError as ex:
-                self._log("Server error: %s" % (ex))
-                raise ex                                         
+            resp = self._upload(url, document)                           
             if (resp.status_code == 409 and
                 self._uploadType != ConflictResolverType.FAIL and
                 self._resolveCount < MAX_RESOLVE_TRIES):            
@@ -37,31 +32,34 @@ class DocumentUpload(object):
             else:
                 self._is_disposed = True
     
-    def _resolveConflict(self, url, document):        
+    def _resolveConflict(self, url, local_document):        
         try:
-            current_document = json.loads(requests.get(url))
+            server_document = json.loads(requests.get(url))
         except Exception as ex:
-            pass         
+            pass                    
         if self._resolveType == ConflictResolverType.UPDATE_MERGE:
-            #merge properties not present in document
-            for k,v in current_document.iteritems():
-                document = document.get(k, v)
-            
-        elif self._resolveType == ConflictResolverType.UPDATE_OVERWRITE:
-            document["id"] = current_document["id"]
+            #merge properties into local_document.  If a property exists in the
+            #server_document, but not in the local_document, then it is merged.                                
+            self._deep_merge(local_document, server_document)                    
+        local_document["id"] = server_document["id"]
     
-    
-    def _recursive_merge(self, merge_from, merge_into):
+    def _deep_merge(self, merge_into, merge_from):
         for k,v in merge_from.iteritems():
             if isinstance(v, dict):
                 merge_into[k] = merge_into.get(k, dict())
                 if isinstance(merge_into[k], dict):
-                    self._recursive_merge(v, merge_into[k])
+                    self._recursive_merge(merge_into[k], v)
             else:
                 merge_into[k] = merge_into.get(k, v)
     
-    def _upload(self, documentPath, document):
-        pass
+    def _upload(self, url, document):
+        self._log('Uploading to %s...' % url)
+        try:
+            resp = requests.post(url, data=document, headers=COUCH_HEADER)
+        except requests.exceptions.ConnectionError as ex:
+            self._log("Server error: %s" % (ex))
+            raise ex
+        return resp       
     
     def _log(self, str):
         if self._verbose:
