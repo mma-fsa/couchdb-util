@@ -1,6 +1,5 @@
 #!/usr/bin/python
-import sys, os, re
-from os.path import expanduser
+import sys, os
 from couchutil import Defaults, DocumentPreprocessor
 from couchutil.DocumentUpload import DocumentUpload, ConflictResolverType
 from couchutil.Utilities import props, make_enum
@@ -8,33 +7,12 @@ from couchutil.Utilities import props, make_enum
 DocumentType = make_enum(DOCUMENT=1, DESIGN=2)
 
 COMMAND_SYNTAX = "[design|docs]/<your_database>/<your_document>.json"
-GLOBAL_DEFAULTS_FILE = '%s/.couchutil'%expanduser("~")
-LOCAL_DEFAULTS_FILE = '%s/'%os.getcwd()
 DIRECTORY_TYPE_MAP = {'design': DocumentType.DESIGN,
                       'docs': DocumentType.DOCUMENT}
 class _Parameters():
     document_type = None
     database_name = None
     document_name = None
-
-def get_defaults():
-    defaults = None
-    nextDefaultsFile = GLOBAL_DEFAULTS_FILE
-    try:
-        #read global defaults, then the local
-        defaults = Defaults(nextDefaultsFile)
-        nextDefaultsFile = LOCAL_DEFAULTS_FILE
-        defaults.process(nextDefaultsFile)
-    except IOError as ex:
-        print "Unable to read defaults '%s' : "%(nextDefaultsFile, ex.message)
-        sys.exit(1)
-    except Defaults.InvalidDefaultsException as ex:
-        print "Error in defaults '%s': %s"%(nextDefaultsFile, ex.message)
-        sys.exit(1)
-    except:
-        print 'Error: %s' % sys.exc_info()[0]
-        sys.exit(1)
-    return defaults
 
 def parse_parameters(targetStr):
     targetParts = targetStr.split('/')
@@ -63,34 +41,23 @@ def build_doc_url(defaults, parameters):
 def main():
     if len(sys.argv) != 2:
         print 'Argument error, expecting: %s' % COMMAND_SYNTAX
-        sys.exit(1)            
-    defaults = get_defaults()
+        sys.exit(1)
     target = sys.argv[1]
     path = os.getcwd() + target
     if not os.path.isfile(path):
         print 'Argument error, "%s" is not a file' % (path)
         sys.exit(1)
-    parameters = parse_parameters(target)
-    doc = DocumentPreprocessor(path).get_document()
-    url = build_doc_url(defaults, parameters)    
-    up = DocumentUpload(ConflictResolverType.UPDATE_MERGE)
-    try:
+    try:                            
+        defaults = Defaults.get_defaults()
+        parameters = parse_parameters(target)
+        doc = DocumentPreprocessor(path).get_document()
+        url = build_doc_url(defaults, parameters)    
+        up = DocumentUpload(ConflictResolverType.UPDATE_MERGE)    
         up.upload(url, doc)
-    except Exception as ex:
-        pass
-            
-    #doc_up = DocumentUpload.DocumentUpload(db_url,
-    #                                      DocumentUploadType.FORCE_UPDATE_OVERWRITE,
-    #                                       True)
-    #doc_up.upload(parameters.document_name,
-    #              document, isRetry)
-    #if parameters.document_type == DocumentUpload.DocumentUploaparameters.document_type, document):        
-    #    documentUploader.upload()
-    #else:
-    #    print 'Operation not implemented'
-    #    sys.exit(1)
-    
-    print 'upload done'
+        print 'upload done'
+    except:
+        print 'upload failed: %s\n\n%s', sys.exc_info()[0], sys.exc_info()[2]
+        sys.exit(1)
     sys.exit(0)           
     
 if __name__ == '__main__':

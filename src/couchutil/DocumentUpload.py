@@ -11,35 +11,36 @@ class DocumentUpload(object):
         self._resolveType = conflictResolver
         self._resolveCount = 0
         self._verbose = verbose
-        self._is_disposed = False
+        self._isDisposed = False
     
     def upload(self, url, document):
-        if self._is_disposed:            
+        if self._isDisposed:            
             raise Exception("Document already complete")                
-        while not self._is_disposed:                
+        while not self._isDisposed:                
             resp = self._upload(url, document)                           
             if (resp.status_code == 409 and
                 self._uploadType != ConflictResolverType.FAIL and
                 self._resolveCount < MAX_RESOLVE_TRIES):            
                 self._log("Resolving document conflict...")
                 self._resolveCount += 1
-                self._resolveConflict(url, document)                        
+                self._resolve_conflict(url, document)                        
             elif resp.status_code != 201:
                 msg = "HTTP Request error: %s %s" % (resp.status_code, resp.text)
                 self._log(msg)
-                self._is_disposed = True
+                self._isDisposed = True
                 raise requests.exceptions.HTTPError(msg)
             else:
-                self._is_disposed = True
+                self._isDisposed = True
     
-    def _resolveConflict(self, url, local_document):        
+    def _resolve_conflict(self, url, local_document):        
         try:
             server_document = json.loads(requests.get(url))
         except Exception as ex:
             pass                    
         if self._resolveType == ConflictResolverType.UPDATE_MERGE:
-            #merge properties into local_document.  If a property exists in the
-            #server_document, but not in the local_document, then it is merged.                                
+            #add properties into local_document.  If a property exists in the
+            #server_document, but not in the local_document, then it is added,
+            #otherwise the property in the local_document is used.                               
             self._deep_merge(local_document, server_document)                    
         local_document["id"] = server_document["id"]
     
