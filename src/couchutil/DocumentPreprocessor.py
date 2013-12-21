@@ -1,10 +1,10 @@
 import os, os.path, json, re
 from DocumentTraversal import DocumentTraversal, DocumentTraversalType
 
-class _DesignDocumentPreprocessorState:
+class _DocumentPreprocessorState:
     cur_path = []
 
-class DesignDocumentPreprocessor:
+class DocumentPreprocessor:
     def __init__(self, absolutePathToFile):
         if not os.path.isfile(absolutePathToFile):
             raise Exception('Invalid path to file: %s' % absolutePathToFile)
@@ -55,7 +55,7 @@ class DesignDocumentPreprocessor:
         with open(fullPath, 'r') as f:
             return f.read()      
 
-    _parserState = _DesignDocumentPreprocessorState()
+    _parserState = _DocumentPreprocessorState()
     _pathToFile = None
     _fileDir = None
     _includeParser = re.compile(r"\s*#.*$")
@@ -63,5 +63,5 @@ class DesignDocumentPreprocessor:
     
 if __name__ == "__main__":
     filePath = '/home/mike/workspace/couchdb-carplots/design/carplots/plots.json'
-    preprocessor = DesignDocumentPreprocessor(filePath)
+    preprocessor = DocumentPreprocessor(filePath)
     doc = preprocessor.get_document()

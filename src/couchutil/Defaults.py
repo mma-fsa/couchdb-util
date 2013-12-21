@@ -2,13 +2,18 @@ import re, sys
 from os.path import expanduser
 from os import getcwd
 
-GLOBAL_DEFAULTS_FILE = '%s/.couchutil'%expanduser("~")
-LOCAL_DEFAULTS_FILE = '%s/'%getcwd()
+FILE_NAME='.couchutil'
+GLOBAL_DEFAULTS_FILE = '%s/%s'%(expanduser("~"),FILE_NAME)
+LOCAL_DEFAULTS_FILE = '%s/%s'%(getcwd(), FILE_NAME)
 
 class InvalidDefaultsException(Exception):
     def __init__(self, message):
         super(InvalidDefaultsException, self).__init__(message)
         self.message = message
+    def __str__(self):
+        return self.message
+    def __repr__(self):
+        return self.message
 
 class Defaults:
     
@@ -23,7 +28,7 @@ class Defaults:
     
     def dbmsURL(self, overrides={}):
         return "%(protocol)s://%(userpart)s%(url)s"%\
-            self._merge_args(self.__defaultProperties, overrides)
+            self._merge_args(self.__defaultProperties, overrides)            
     
     def process(self, defaultsFile):        
         with open(defaultsFile, 'r') as f:
@@ -58,7 +63,11 @@ class Defaults:
         return args
                         
     __defaultDatabaseURL = ''
-    __defaultProperties = {'user':'', 'pass':'', 'protocol':'http', 'url':'localhost:5984', 'database':''}
+    __defaultProperties = {'user':'admin', 
+                           'pass':'',
+                           'protocol':'http',
+                           'url':'localhost:5984',
+                           'database':''}
     __propertyParsers = {}
     __comment = re.compile(r"^\s*\#.*$")
     __whitespace = re.compile(r"^\s*$")
@@ -72,13 +81,14 @@ def get_defaults():
         nextDefaultsFile = LOCAL_DEFAULTS_FILE
         defaults.process(nextDefaultsFile)
     except IOError as ex:
-        raise InvalidDefaultsException("Unable to read defaults '%s' : "
-                                       %(nextDefaultsFile, ex.message))
+        msg = "Unable to read defaults '%s': %s" %(nextDefaultsFile, ex)
+        raise InvalidDefaultsException(msg)
     except Defaults.InvalidDefaultsException as ex:
-        raise InvalidDefaultsException("Error in defaults '%s': %s"
-                                       %(nextDefaultsFile, ex.message))
-    except:
-        raise InvalidDefaultsException('Error: %s' % sys.exc_info()[0])
+        msg = "Error in defaults '%s': %s"%(nextDefaultsFile, ex.message)
+        raise InvalidDefaultsException(msg)
+    except Exception as ex:
+        msg = 'Error: %s' % ex.message
+        raise InvalidDefaultsException(msg)
 
     return defaults
 
