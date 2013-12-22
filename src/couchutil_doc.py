@@ -7,7 +7,7 @@ from couchutil.Utilities import props, make_enum
 
 DocumentType = make_enum(DOCUMENT=1, DESIGN=2)
 
-COMMAND_SYNTAX = "[design|docs]/<your_database>/<your_document>.json"
+COMMAND_SYNTAX = "[design|docs]/<your_database>/<your_document>"
 DIRECTORY_TYPE_MAP = {'design': DocumentType.DESIGN,
                       'docs': DocumentType.DOCUMENT}
 EXTENSION_RE = re.compile(r"^(.*?)(\..*)?$")
