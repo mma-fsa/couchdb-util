@@ -49,7 +49,7 @@ class DocumentPreprocessor:
     
     def _get_included_file(self, inc):        
         pathToInclude = '/'.join(inc[:-1])
-        fullPath = self._fileDir + '/' + pathToInclude + '/' + inc[-1] + '.json'
+        fullPath = self._fileDir + '/' + pathToInclude + '/' + inc[-1] + '.js'
         if not os.path.isfile(fullPath):
             raise Exception('Cannot include file: %s' % fullPath)
         with open(fullPath, 'r') as f:

@@ -43,7 +43,7 @@ def update_doc_rev(path, revision):
         doc = json.loads(f.read())
     doc["_rev"] = revision
     with open(path, 'w') as f:
-        f.write(json.dumps(doc))
+			f.write(json.dumps(doc, sort_keys=True, indent=2, separators=(',',':')))
 
 def main():
     if len(sys.argv) != 2:
