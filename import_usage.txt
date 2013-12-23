@@ -1,0 +1,1 @@
+mysql --user=root --password='' --column-names=TRUE phineas_and_ferb -e "SELECT * from characters;" > ~/tmp/output.txt

@@ -36,7 +36,7 @@ def main():
 		try:
 			if len(names) != len(row):
 				raise Exception('row/name len mismatch')
-			docs.append({"name": document_name,\
+			docs.append({"doc_type": document_name,\
 				"data": dict(zip(names, row))})
 			num_rows += 1
 		except Exception as ex:
@@ -78,6 +78,6 @@ def main():
 	sys.exit(0)
 ## END MAIN ##
 
-if __name__ == "main":
+if __name__ == "__main__":
 	main()
 
