@@ -5,13 +5,15 @@ ConflictResolverType = make_enum(FAIL=1, UPDATE_MERGE=2, UPDATE_OVERWRITE=3)
 
 COUCH_HEADER = {'Content-type':'application/json'}
 MAX_RESOLVE_TRIES = 10
-class DocumentUpload(object):
+class DocumentUploader(object):
     def __init__(self, conflictResolver=ConflictResolverType.FAIL,
+                 auth=None,
                  verbose=False):
         self._resolveType = conflictResolver
         self._resolveCount = 0
         self._verbose = verbose
         self._isDisposed = False
+        self._auth = auth
     
     def upload(self, url, original_document, clone_doc=True):
         if self._isDisposed:            
@@ -61,7 +63,10 @@ class DocumentUpload(object):
     def _upload(self, url, document):
         self._log('Uploading to %s...' % url)
         try:
-            resp = requests.put(url, data=json.dumps(document), headers=COUCH_HEADER)
+            resp = requests.put(url, 
+                                data=json.dumps(document), 
+                                headers=COUCH_HEADER, 
+                                auth=self._auth)
         except requests.exceptions.ConnectionError as ex:
             self._log("Server error: %s" % (ex))
             raise ex

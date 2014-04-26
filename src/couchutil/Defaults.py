@@ -20,15 +20,22 @@ class Defaults:
     def __init__(self, defaultsFile=None):
         self._init_parsers()
         if defaultsFile != None:
-            self.process(defaultsFile)        
+            self.process(defaultsFile)
     
-    def databaseURL(self, overrides={}):
+    @property
+    def database_url(self, overrides={}):
         return "%(protocol)s://%(userpart)s%(url)s/%(database)s"%\
             self._merge_args(self.__defaultProperties, overrides)
     
-    def dbmsURL(self, overrides={}):
+    @property
+    def server_url(self, overrides={}):
         return "%(protocol)s://%(userpart)s%(url)s"%\
-            self._merge_args(self.__defaultProperties, overrides)            
+            self._merge_args(self.__defaultProperties, overrides)        
+    
+    @property        
+    def auth(self):
+        return (self.__defaultProperties['user'], 
+                self.__defaultProperties['pass'])
     
     def process(self, defaultsFile):        
         with open(defaultsFile, 'r') as f:
@@ -45,7 +52,7 @@ class Defaults:
                         break
                 if not processed:
                     raise InvalidDefaultsException("invalid config line in %s: %s"%\
-                                                       (defaultsFile, line))
+                                                       (defaultsFile, line))        
                     
     def _init_parsers(self):
         for k in self.__defaultProperties:
@@ -57,10 +64,8 @@ class Defaults:
     def _merge_args(self, base, override):
         args = dict(base.items() + override.items())
         userpart = args['user'] if args['user'].strip() != '' else ''
-        userpart+= ":%s"%args['pass'] if args['pass'].strip() != '' and\
-            userpart != '' else ''
         args['userpart'] = "%s@"%userpart if userpart != '' else userpart
-        return args
+        return args    
                         
     __defaultDatabaseURL = ''
     __defaultProperties = {'user':'admin', 
@@ -72,13 +77,16 @@ class Defaults:
     __comment = re.compile(r"^\s*\#.*$")
     __whitespace = re.compile(r"^\s*$")
 
-def get_defaults():
+def get_defaults(defaults_override=None):
     defaults = None
     nextDefaultsFile = GLOBAL_DEFAULTS_FILE
     try:
         #read global defaults, then the local
         defaults = Defaults(nextDefaultsFile)
-        nextDefaultsFile = LOCAL_DEFAULTS_FILE
+        if defaults_override == None:
+            nextDefaultsFile = LOCAL_DEFAULTS_FILE
+        else:
+            nextDefaultsFile = '%s/%s_%s'%(getcwd(), FILE_NAME, defaults_override)        
         defaults.process(nextDefaultsFile)
     except IOError as ex:
         msg = "Unable to read defaults '%s': %s" %(nextDefaultsFile, ex)
